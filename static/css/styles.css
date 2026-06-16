@@ -55,6 +55,21 @@
     --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+body.light-theme {
+    --bg-app: #f1f5f9;          /* Slate 100 */
+    --bg-sidebar: #ffffff;      /* White */
+    --bg-card: #ffffff;         /* White */
+    --bg-card-hover: #f8fafc;   /* Slate 50 */
+    --bg-input: #f8fafc;        /* Slate 50 */
+    --border-color: #cbd5e1;    /* Slate 300 */
+    --border-hover: #94a3b8;    /* Slate 400 */
+    --text-primary: #0f172a;    /* Slate 900 */
+    --text-secondary: #475569;  /* Slate 600 */
+    --text-muted: #64748b;      /* Slate 500 */
+    
+    --primary-glow: rgba(79, 70, 229, 0.06);
+}
+
 /* Reset and Base Styles */
 * {
     margin: 0;
@@ -617,7 +632,7 @@ body {
     background-color: var(--bg-input);
     padding: 2px 6px;
     border-radius: 4px;
-    color: #f3f4f6;
+    color: var(--text-primary);
     border: 1px solid var(--border-color);
 }
 

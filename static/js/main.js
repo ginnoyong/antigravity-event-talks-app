@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshBtn = document.getElementById('refreshBtn');
     const refreshIcon = document.getElementById('refreshIcon');
     const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
     const timelineContainer = document.getElementById('timelineContainer');
     const emptyState = document.getElementById('emptyState');
     const resetFiltersBtn = document.getElementById('resetFiltersBtn');
@@ -55,6 +57,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event Listeners
     refreshBtn.addEventListener('click', fetchReleaseNotes);
     exportCsvBtn.addEventListener('click', exportToCsv);
+
+    // Initialize Theme State
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        themeIcon.setAttribute('data-lucide', 'moon');
+    } else {
+        document.body.classList.remove('light-theme');
+        themeIcon.setAttribute('data-lucide', 'sun');
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const isLight = document.body.classList.toggle('light-theme');
+        if (isLight) {
+            localStorage.setItem('theme', 'light');
+            themeIcon.setAttribute('data-lucide', 'moon');
+            showToast("Theme changed to Light Mode");
+        } else {
+            localStorage.setItem('theme', 'dark');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            showToast("Theme changed to Dark Mode");
+        }
+        lucide.createIcons();
+    });
     
     searchInput.addEventListener('input', (e) => {
         state.searchQuery = e.target.value.trim().toLowerCase();
