@@ -207,6 +207,12 @@ body {
     margin-bottom: 32px;
 }
 
+.header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 .header-title h2 {
     font-size: 1.75rem;
     font-weight: 700;
@@ -996,6 +1002,9 @@ body {
     
     .header-actions {
         width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     }
     
     .header-actions button {

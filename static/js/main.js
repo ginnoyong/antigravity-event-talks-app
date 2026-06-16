@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const refreshBtn = document.getElementById('refreshBtn');
     const refreshIcon = document.getElementById('refreshIcon');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
     const timelineContainer = document.getElementById('timelineContainer');
     const emptyState = document.getElementById('emptyState');
     const resetFiltersBtn = document.getElementById('resetFiltersBtn');
@@ -53,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners
     refreshBtn.addEventListener('click', fetchReleaseNotes);
+    exportCsvBtn.addEventListener('click', exportToCsv);
     
     searchInput.addEventListener('input', (e) => {
         state.searchQuery = e.target.value.trim().toLowerCase();
@@ -144,6 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Start spinning icon
         refreshIcon.classList.add('spinning');
         refreshBtn.disabled = true;
+        exportCsvBtn.disabled = true;
+        exportCsvBtn.style.opacity = 0.5;
         
         // Show skeleton loading structure
         renderSkeleton();
@@ -156,6 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.status === 'success') {
                     state.updates = data.updates;
+                    exportCsvBtn.disabled = false;
+                    exportCsvBtn.style.opacity = 1;
                     calculateStats();
                     applyFilters();
                 } else {
@@ -166,6 +172,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => {
                 refreshIcon.classList.remove('spinning');
                 refreshBtn.disabled = false;
+                exportCsvBtn.disabled = true;
+                exportCsvBtn.style.opacity = 0.5;
                 console.error('Fetch Error: ', err);
                 renderError(err.message || 'Failed to fetch release notes from server.');
             });
@@ -227,10 +235,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (state.filteredUpdates.length === 0) {
             emptyState.style.display = 'flex';
+            exportCsvBtn.disabled = true;
+            exportCsvBtn.style.opacity = 0.5;
             return;
         }
 
         emptyState.style.display = 'none';
+        exportCsvBtn.disabled = false;
+        exportCsvBtn.style.opacity = 1;
 
         // Group updates by date
         const groups = {};
@@ -307,8 +319,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cleanText = `BigQuery Update (${up.date}): [${up.category}] ${up.body_text}\n\nDetails: ${up.link}`;
                     navigator.clipboard.writeText(cleanText).then(() => {
                         showToast("Release note text copied!");
+                        
+                        // Swap icon temporarily
+                        const icon = copyBtn.querySelector('i');
+                        icon.setAttribute('data-lucide', 'check');
+                        copyBtn.style.color = 'var(--color-feature)';
+                        copyBtn.style.borderColor = 'var(--color-feature)';
+                        lucide.createIcons();
+                        
+                        setTimeout(() => {
+                            icon.setAttribute('data-lucide', 'copy');
+                            copyBtn.style.color = '';
+                            copyBtn.style.borderColor = '';
+                            lucide.createIcons();
+                        }, 2000);
                     }).catch(err => {
                         console.error('Copy failed: ', err);
+                        showToast("Failed to copy text", true);
                     });
                 });
 
@@ -485,6 +512,58 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
         lucide.createIcons();
+    }
+
+    // Export currently filtered updates to CSV
+    function exportToCsv() {
+        if (state.filteredUpdates.length === 0) {
+            showToast("No updates to export", true);
+            return;
+        }
+
+        // CSV headers
+        let csvContent = "";
+        
+        // Define header row
+        const headers = ["Date", "Category", "Description", "Source Link"];
+        
+        // Helper to format values for CSV (escaping quotes and wrapping in quotes)
+        const formatValue = (val) => {
+            if (val === null || val === undefined) return '""';
+            let formatted = val.toString().replace(/"/g, '""');
+            return `"${formatted}"`;
+        };
+
+        const rows = [headers.map(formatValue).join(",")];
+
+        state.filteredUpdates.forEach(up => {
+            const row = [
+                up.date,
+                up.category,
+                up.body_text,
+                up.link
+            ];
+            rows.push(row.map(formatValue).join(","));
+        });
+
+        const csvString = rows.join("\n");
+        
+        // Create download link
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        
+        // Get current date for filename
+        const today = new Date().toISOString().slice(0, 10);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `bigquery_release_notes_${today}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast("CSV Exported successfully!");
     }
 
     // Toast popup notification helper
